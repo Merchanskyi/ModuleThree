@@ -47,12 +47,19 @@ namespace ModuleThreeApp
                         Console.WriteLine($"[Вы выбрали действие просмотра серверов]");
                         Console.ResetColor();
 
-                        var dataCenter = new DataCenter();
-
-                        // Ярик вот тут помоги мне понять как вывести мне все серваки списком в консольке
-                        for (int i = 0; i < dataCenter.Servers.Count; i++)
+                        if (File.Exists("data.json"))
                         {
-                            OutputInfo(dataCenter.Servers[i]);
+                            Data = JsonConvert.DeserializeObject<List<DataCenter>>(File.ReadAllText("data.json"));
+                        }
+                        else
+                        {
+                            //Console.WriteLine("Список пустой создаёт файл если его вдруг нет");
+                            Data = new List<DataCenter>();
+                        }
+
+                        for (int i = 0; i < Data.Count; i++)
+                        {
+                            OutputInfo(Data[i].Servers);
                         }
                         break;
 
