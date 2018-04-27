@@ -59,7 +59,7 @@ namespace ModuleThreeApp
 
                         for (int i = 0; i < Data.Count; i++)
                         {
-                            OutputInfo(Data[i].Servers);
+                            OutputInfo(Data.);
                         }
                         break;
 
