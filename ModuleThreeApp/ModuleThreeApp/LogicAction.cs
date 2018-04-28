@@ -9,7 +9,7 @@ namespace ModuleThreeApp
 {
     class LogicAction
     {
-        private static List<DataCenter> Data;
+        private static List<DataCenter> DataCenters;
 
         public static void Logic()
         {
@@ -49,18 +49,29 @@ namespace ModuleThreeApp
 
                         if (File.Exists("data.json"))
                         {
-                            Data = JsonConvert.DeserializeObject<List<DataCenter>>(File.ReadAllText("data.json"));
+                            DataCenters = JsonConvert.DeserializeObject<List<DataCenter>>(File.ReadAllText("data.json"));
                         }
                         else
                         {
                             //Console.WriteLine("Список пустой создаёт файл если его вдруг нет");
-                            Data = new List<DataCenter>();
+                            DataCenters = new List<DataCenter>();
                         }
 
-                        for (int i = 0; i < Data.Count; i++)
+                        foreach (var dataCenter in DataCenters)
                         {
-                            OutputInfo(Data.);
+                            Console.WriteLine(dataCenter.ToString());
+                            //OutputInfo(dataCenter.Servers);
                         }
+
+                        //Второй вариант
+                        /*
+                        for (int i = 0; i < DataCenters.Count; i++)
+                        {
+                            for (int j = 0; j < DataCenters[i].Servers.Count; j++)
+                            {
+                                OutputInfo(DataCenters[i].Servers[j]);
+                            }
+                        }*/
                         break;
 
                     case DCAction.WriteServerInData:
@@ -71,18 +82,18 @@ namespace ModuleThreeApp
 
                         if (File.Exists("data.json"))
                         {
-                            Data = JsonConvert.DeserializeObject<List<DataCenter>>(File.ReadAllText("data.json"));
+                            DataCenters = JsonConvert.DeserializeObject<List<DataCenter>>(File.ReadAllText("data.json"));
                         }
                         else
                         {
-                            Data = new List<DataCenter>();
+                            DataCenters = new List<DataCenter>();
                         }
 
                         Console.ForegroundColor = ConsoleColor.Yellow;
                         Console.WriteLine("[Введите новый сервер]");
                         Console.ResetColor();
 
-                        var server = new Server
+                        var newServer = new Server
                         {
                             Name = ReadFromKeyboard("Имя сервера: ", x => Convert.ToString(x)),
                             AdditionalPower = ReadFromKeyboard("Дополнительная мощность: ", x => Convert.ToString(x)),
@@ -90,7 +101,7 @@ namespace ModuleThreeApp
                             PowerOfSpecific = ReadFromKeyboard("Мощность конкретного сервера: ", x => Convert.ToString(x))
                         };
 
-                        Data[0].Servers.Add(server);
+                        DataCenters[0].Servers.Add(newServer);
                         SaveData();
 
                         Console.ForegroundColor = ConsoleColor.Green;
@@ -105,12 +116,12 @@ namespace ModuleThreeApp
         }
 
         // Удобный и читабельный вывод для действия просмотра серверов в консольке
-        private static void OutputInfo(Server server)
+        private static void OutputInfo(List<Server> servers)
         {
-            Console.Write(server.Name + " | ");
-            Console.Write(server.AdditionalPower + " | ");
-            Console.Write(server.BaseType + " | ");
-            Console.WriteLine(server.PowerOfSpecific);
+            for (var index = 0; index < servers.Count; index++)
+            {
+                Console.WriteLine($"{index + 1}) {servers[index].ToString()}");
+            }
         }
 
         // Ввожу базовый тип с условием
@@ -150,7 +161,7 @@ namespace ModuleThreeApp
         // Сохранение любого изменения в дате через json
         public static void SaveData()
         {
-            File.WriteAllText("data.json", JsonConvert.SerializeObject(Data));
+            File.WriteAllText("data.json", JsonConvert.SerializeObject(DataCenters));
         }
     }
 }
