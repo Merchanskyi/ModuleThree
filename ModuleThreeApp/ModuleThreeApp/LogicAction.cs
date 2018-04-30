@@ -4,21 +4,22 @@ using LibraryApp;
 using Newtonsoft.Json;
 using System.IO;
 using System.Collections.Generic;
+using System.Threading;
 
 namespace ModuleThreeApp
 {
     class LogicAction
     {
-        private static List<DataCenter> DataCenters;
+        private static List<Server> Servers;
 
         public static void Logic()
         {
             DCAction[] allowdActions;
             allowdActions = new DCAction[]
                 {
+                    DCAction.EndWork,
                     DCAction.GetServers,
-                    DCAction.WriteServerInData,
-                    DCAction.EndWork
+                    DCAction.WriteServerInData
                 };
 
             Console.ForegroundColor = ConsoleColor.Yellow;
@@ -49,29 +50,35 @@ namespace ModuleThreeApp
 
                         if (File.Exists("data.json"))
                         {
-                            DataCenters = JsonConvert.DeserializeObject<List<DataCenter>>(File.ReadAllText("data.json"));
+                            Servers = JsonConvert.DeserializeObject<List<Server>>(File.ReadAllText("data.json"));
                         }
                         else
                         {
-                            //Console.WriteLine("Список пустой создаёт файл если его вдруг нет");
-                            DataCenters = new List<DataCenter>();
+                            Console.ForegroundColor = ConsoleColor.Green;
+                            Console.WriteLine("Файл data.json успешно создан!");
+                            Console.ResetColor();
+                            File.WriteAllText("data.json", "[]");
+                            Servers = new List<Server>();
                         }
 
-                        foreach (var dataCenter in DataCenters)
+                        try
                         {
-                            Console.WriteLine(dataCenter.ToString());
-                            //OutputInfo(dataCenter.Servers);
-                        }
-
-                        //Второй вариант
-                        /*
-                        for (int i = 0; i < DataCenters.Count; i++)
-                        {
-                            for (int j = 0; j < DataCenters[i].Servers.Count; j++)
+                            if (Servers == null || File.ReadAllText("data.json") == "[]")
                             {
-                                OutputInfo(DataCenters[i].Servers[j]);
+                                Console.ForegroundColor = ConsoleColor.Red;
+                                Console.WriteLine("Файл пуст!");
+                                Console.ResetColor();
+                                break;
                             }
-                        }*/
+                        }
+                        catch (Exception ex)
+                        {
+                            Console.ForegroundColor = ConsoleColor.Red;
+                            Console.WriteLine(ex.Message);
+                            Console.ResetColor();
+                        }
+
+                        OutputInfo(Servers);
                         break;
 
                     case DCAction.WriteServerInData:
@@ -82,11 +89,15 @@ namespace ModuleThreeApp
 
                         if (File.Exists("data.json"))
                         {
-                            DataCenters = JsonConvert.DeserializeObject<List<DataCenter>>(File.ReadAllText("data.json"));
+                            Servers = JsonConvert.DeserializeObject<List<Server>>(File.ReadAllText("data.json"));
                         }
                         else
                         {
-                            DataCenters = new List<DataCenter>();
+                            Console.ForegroundColor = ConsoleColor.Green;
+                            Console.WriteLine("Файл data.json успешно создан!");
+                            Console.ResetColor();
+                            File.WriteAllText("data.json", "[]");
+                            Servers = new List<Server>();
                         }
 
                         Console.ForegroundColor = ConsoleColor.Yellow;
@@ -96,12 +107,11 @@ namespace ModuleThreeApp
                         var newServer = new Server
                         {
                             Name = ReadFromKeyboard("Имя сервера: ", x => Convert.ToString(x)),
-                            AdditionalPower = ReadFromKeyboard("Дополнительная мощность: ", x => Convert.ToString(x)),
-                            BaseType = ReadFromKeyboard("Базовый тип(0-5): ", x => EnterBaseType(x)),
+                            AdditionalPower = ReadFromKeyboard("Дополнительная мощность: ", x => EnterBaseType(x)),
                             PowerOfSpecific = ReadFromKeyboard("Мощность конкретного сервера: ", x => Convert.ToString(x))
                         };
 
-                        DataCenters[0].Servers.Add(newServer);
+                        Servers.Add(newServer);
                         SaveData();
 
                         Console.ForegroundColor = ConsoleColor.Green;
@@ -120,7 +130,7 @@ namespace ModuleThreeApp
         {
             for (var index = 0; index < servers.Count; index++)
             {
-                Console.WriteLine($"{index + 1}) {servers[index].ToString()}");
+                Console.WriteLine($"Слот {index + 1}) {servers[index].ToString()}");
             }
         }
 
@@ -129,10 +139,10 @@ namespace ModuleThreeApp
         {
             var baseType = Convert.ToInt32(value);
 
-            if (baseType < 0 || baseType > 5)
+            if (baseType < 0 || baseType > 100)
             {
                 Console.ForegroundColor = ConsoleColor.Red;
-                throw new Exception("Значение должно быть не меньше 0 и не больше 5");
+                throw new Exception("Значение должно быть не меньше 0 и не больше 100");
             }
 
             return baseType;
@@ -161,7 +171,7 @@ namespace ModuleThreeApp
         // Сохранение любого изменения в дате через json
         public static void SaveData()
         {
-            File.WriteAllText("data.json", JsonConvert.SerializeObject(DataCenters));
+            File.WriteAllText("data.json", JsonConvert.SerializeObject(Servers));
         }
     }
 }

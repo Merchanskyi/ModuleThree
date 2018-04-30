@@ -2,8 +2,8 @@
 {
     public enum DCAction
     {
+        EndWork = 0,
         GetServers = 1,
-        WriteServerInData = 2,
-        EndWork = 0
+        WriteServerInData = 2
     }
 }
