@@ -8,6 +8,7 @@
 
         public string PowerOfSpecific { get; set; }
 
+        public bool IsHide { get; set; }
 
         public override string ToString()
         {

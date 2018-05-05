@@ -10,17 +10,33 @@ namespace ModuleThreeApp
 {
     class LogicAction
     {
-        private static List<Server> Servers;
-
-        public static void Logic()
+        // Сразу при запуске проверяем был ли создан файл, если нет - создаём.
+        public LogicAction()
         {
-            DCAction[] allowdActions;
-            allowdActions = new DCAction[]
-                {
-                    DCAction.EndWork,
-                    DCAction.GetServers,
-                    DCAction.WriteServerInData
-                };
+            if (File.Exists("data.json"))
+            {
+                SaveJsonData.Servers = JsonConvert.DeserializeObject<List<Server>>(File.ReadAllText("data.json"));
+            }
+            else
+            {
+                Console.ForegroundColor = ConsoleColor.Green;
+                Console.WriteLine("Файл data.json успешно создан!");
+                Console.ResetColor();
+                File.WriteAllText("data.json", "[]");
+                SaveJsonData.Servers = new List<Server>();
+            }
+        }
+
+        public void Logic()
+        {
+            var allowdActions = new DCAction[]
+            {
+                DCAction.EndWork,
+                DCAction.GetServers,
+                DCAction.WriteServerInData,
+                DCAction.EnableThrust,
+                DCAction.ReloadServers
+            };
 
             Console.ForegroundColor = ConsoleColor.Yellow;
             Console.WriteLine("Выберите действие цифрой:");
@@ -33,7 +49,7 @@ namespace ModuleThreeApp
                     Console.WriteLine($"[{(int)item}] {item}");
                 }
 
-                DCAction action = (DCAction)int.Parse(Console.ReadLine());
+                DCAction action = (DCAction)HelperOutPut.ReadFromKeyboard("\nКомандная строка: ", x => Convert.ToInt32(x));
 
                 if (!allowdActions.Contains(action))
                 {
@@ -42,34 +58,11 @@ namespace ModuleThreeApp
 
                 switch (action)
                 {
-                    case DCAction.GetServers:
-                        Console.Clear();
-                        Console.ForegroundColor = ConsoleColor.DarkGreen;
-                        Console.WriteLine($"[Вы выбрали действие просмотра серверов]");
-                        Console.ResetColor();
-
-                        if (File.Exists("data.json"))
-                        {
-                            Servers = JsonConvert.DeserializeObject<List<Server>>(File.ReadAllText("data.json"));
-                        }
-                        else
-                        {
-                            Console.ForegroundColor = ConsoleColor.Green;
-                            Console.WriteLine("Файл data.json успешно создан!");
-                            Console.ResetColor();
-                            File.WriteAllText("data.json", "[]");
-                            Servers = new List<Server>();
-                        }
-
+                    case DCAction.EndWork:
                         try
                         {
-                            if (Servers == null || File.ReadAllText("data.json") == "[]")
-                            {
-                                Console.ForegroundColor = ConsoleColor.Red;
-                                Console.WriteLine("Файл пуст!");
-                                Console.ResetColor();
-                                break;
-                            }
+                            //Не работает. Тут я пытаюсь при выходе с программы погасить все рабочие потоки, чтобы не было заддержки при выходе, прога ждёт пока полностью закончатся потоки.
+                            //Thread.CurrentThread.Abort();
                         }
                         catch (Exception ex)
                         {
@@ -77,101 +70,25 @@ namespace ModuleThreeApp
                             Console.WriteLine(ex.Message);
                             Console.ResetColor();
                         }
+                        return;
 
-                        OutputInfo(Servers);
+                    case DCAction.GetServers:
+                        CaseGetServers.GetServers();
                         break;
 
                     case DCAction.WriteServerInData:
-                        Console.Clear();
-                        Console.ForegroundColor = ConsoleColor.DarkGreen;
-                        Console.WriteLine($"[Вы выбрали действие записи нового сервера в DataFile]");
-                        Console.ResetColor();
-
-                        if (File.Exists("data.json"))
-                        {
-                            Servers = JsonConvert.DeserializeObject<List<Server>>(File.ReadAllText("data.json"));
-                        }
-                        else
-                        {
-                            Console.ForegroundColor = ConsoleColor.Green;
-                            Console.WriteLine("Файл data.json успешно создан!");
-                            Console.ResetColor();
-                            File.WriteAllText("data.json", "[]");
-                            Servers = new List<Server>();
-                        }
-
-                        Console.ForegroundColor = ConsoleColor.Yellow;
-                        Console.WriteLine("[Введите новый сервер]");
-                        Console.ResetColor();
-
-                        var newServer = new Server
-                        {
-                            Name = ReadFromKeyboard("Имя сервера: ", x => Convert.ToString(x)),
-                            AdditionalPower = ReadFromKeyboard("Дополнительная мощность: ", x => EnterBaseType(x)),
-                            PowerOfSpecific = ReadFromKeyboard("Мощность конкретного сервера: ", x => Convert.ToString(x))
-                        };
-
-                        Servers.Add(newServer);
-                        SaveData();
-
-                        Console.ForegroundColor = ConsoleColor.Green;
-                        Console.WriteLine("[Сервер успешно добавлен и сохранен в DataFile]\n");
-                        Console.ResetColor();
+                        CaseWriteInData.WriteInData();
                         break;
 
-                    case DCAction.EndWork:
-                        return;
+                    case DCAction.EnableThrust:
+                        CaseEnableThrust.EnableThrust();
+                        break;
+
+                    case DCAction.ReloadServers:
+                        CaseReloadServers.ReloadServers();
+                        break;
                 }
             }
-        }
-
-        // Удобный и читабельный вывод для действия просмотра серверов в консольке
-        private static void OutputInfo(List<Server> servers)
-        {
-            for (var index = 0; index < servers.Count; index++)
-            {
-                Console.WriteLine($"Слот {index + 1}) {servers[index].ToString()}");
-            }
-        }
-
-        // Ввожу базовый тип с условием
-        public static int EnterBaseType(string value)
-        {
-            var baseType = Convert.ToInt32(value);
-
-            if (baseType < 0 || baseType > 100)
-            {
-                Console.ForegroundColor = ConsoleColor.Red;
-                throw new Exception("Значение должно быть не меньше 0 и не больше 100");
-            }
-
-            return baseType;
-        }
-
-        // Передаю тип елемента
-        public static T ReadFromKeyboard<T>(string message, Func<string, T> mapper)
-        {
-            while (true)
-            {
-                Console.Write(message);
-
-                try
-                {
-                    return mapper.Invoke(Console.ReadLine());
-                }
-                catch (Exception ex)
-                {
-                    Console.ForegroundColor = ConsoleColor.Red;
-                    Console.WriteLine(ex.Message);
-                    Console.ResetColor();
-                }
-            }
-        }
-
-        // Сохранение любого изменения в дате через json
-        public static void SaveData()
-        {
-            File.WriteAllText("data.json", JsonConvert.SerializeObject(Servers));
         }
     }
 }
